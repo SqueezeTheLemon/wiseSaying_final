@@ -6,6 +6,7 @@ package com.back.domain.wiseSaying.controller;
 
 import com.back.domain.wiseSaying.entity.WiseSaying;
 import com.back.domain.wiseSaying.service.WiseSayingService;
+import com.back.global.rq.Rq;
 
 import java.util.Scanner;
 
@@ -31,8 +32,8 @@ public class WiseSayingController {
         System.out.println(saying.getId() + "번 명언이 등록되었습니다.");
     }
 
-    public void delete(String query){
-        int delete_number = Integer.parseInt(query.split("=")[1]);
+    public void delete(Rq rq){
+        int delete_number = rq.getParamAsInt("id", -1);
 
         // 추후 WiseSayingService.delete() 호출
         boolean success = wiseSayingService.deleteById(delete_number);
@@ -44,8 +45,8 @@ public class WiseSayingController {
         }
     }
 
-    public void edit(String query){
-        int edit_number = Integer.parseInt(query.split("=")[1]);
+    public void edit(Rq rq){
+        int edit_number = rq.getParamAsInt("id", -1);
 
         // 수정하려는 명언이 존재하는지 확인
         WiseSaying saying =  wiseSayingService.findById(edit_number);
@@ -73,34 +74,29 @@ public class WiseSayingController {
         }
     }
 
-    public void show(String query){
+    public void show(Rq rq){
         WiseSaying[] sayings = wiseSayingService.getAllList();
         int totalPages = (sayings.length + 4) / 5;
 
-        int page = (query.contains("=") && !query.split("=", 2)[1].isBlank())
-                ? Integer.parseInt(query.split("=", 2)[1])
-                : 1;System.out.println("번호 / 작가 / 명언");
+        int pageNumber = rq.getParamAsInt("page", 1);
         System.out.println("-----------------------");
 
-        WiseSaying[] pagedSayings = wiseSayingService.getPagedList(sayings, page);
+        WiseSaying[] pagedSayings = wiseSayingService.getPagedList(sayings, pageNumber);
 
         // Repository에서 이미 최신순으로 반환
         for (WiseSaying pageSaying : pagedSayings) {
             System.out.println(pageSaying);
         }
         System.out.println("----------------------");
-        System.out.printf("페이지 : %d / %d%n", page, totalPages);
+        System.out.printf("페이지 : [%d] / %d%n", pageNumber, totalPages);
 
     }
 
-    public void search(String query){
+    public void search(Rq rq){
 
-        String[] params = query.split("&");
-        String type = params[0].split("=", 2)[1];
-        String keyword = params[1].split("=", 2)[1];
-        int page = (params.length > 2 && params[2].contains("=") && !params[2].split("=", 2)[1].isBlank())
-                ? Integer.parseInt(params[2].split("=", 2)[1])
-                : 1;
+        String type = rq.getParam("keywordType", "content");
+        String keyword = rq.getParam("keyWord", "");
+        int page = rq.getParamAsInt("page", 1);
 
         WiseSaying[] keySayings = wiseSayingService.getByKeyword(type, keyword);
         if (keySayings == null || keySayings.length == 0) {

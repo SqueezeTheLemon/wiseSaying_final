@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Comparator;
 
 public class WiseSayingRepository {
 
@@ -32,14 +33,15 @@ public class WiseSayingRepository {
                 index = Integer.parseInt(Files.readString(lastIdPath).trim()) + 1;
             }
 
-            for (int i=1 ; i<index ; i++){
-                Path filePath = dbPath.resolve(i+".json");
+            for (int i = 1; i < index; i++) {
+                Path filePath = dbPath.resolve(i + ".json");
 
-                if(Files.exists(filePath)){
+                if (Files.exists(filePath)) {
                     String json = Files.readString(filePath);
-                    sayings.add(i, fromJson(json));
-                }
+                    WiseSaying saying = fromJson(json);
 
+                    sayings.add(saying); // 수정
+                }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -69,19 +71,9 @@ public class WiseSayingRepository {
 
     // 명언 목록
     public WiseSaying[] findAll() {
-        WiseSaying[] result = new WiseSaying[index - 1];
-
-        int count = 0;
-
-        // 최신순으로 배열에 저장
-        for (int i = index - 1; i >= 1; i--) {
-            if (sayings.get(i) != null) {
-                result[count] = sayings.get(i);
-                count++;
-            }
-        }
-
-        return java.util.Arrays.copyOf(result, count);
+        return sayings.stream()
+                .sorted(Comparator.comparingInt(WiseSaying::getId).reversed())
+                .toArray(WiseSaying[]::new);
     }
 
     public WiseSaying[] findByKeyword(String type, String keyword) {
@@ -131,11 +123,10 @@ public class WiseSayingRepository {
 
     // 명언 조회
     public WiseSaying findById(int id) {
-        if (id < 1 || id >= index) {
-            return null;
-        }
-
-        return sayings.get(id);
+        return sayings.stream() // 명언 목록에서 스트림 생성 (데이터를 반복문 없이 검색, 필터링, 정렬, 변환해주는 기능)
+                .filter(saying -> saying != null && saying.getId() == id) // 조건 (id 일치)에 맞는 명언만 통과
+                .findFirst() // 조건에 맞는 첫번째 명언만 선택
+                .orElse(null); // 검색 결과 없다면 null 반환
     }
 
     // 명언 저장 및 수정
@@ -166,7 +157,7 @@ public class WiseSayingRepository {
 
         try {
             Files.deleteIfExists(filePath);
-            sayings.add(id, null);
+            sayings.removeIf(saying -> saying != null && saying.getId() == id);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
