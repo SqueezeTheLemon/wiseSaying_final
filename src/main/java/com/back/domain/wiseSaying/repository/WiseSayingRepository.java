@@ -17,7 +17,8 @@ public class WiseSayingRepository {
     private final Path lastIdPath =dbPath.resolve("lastId.txt");
 
     // 최대 배열 길이 1001
-    private final WiseSaying[] sayings = new WiseSaying[1001];
+    // private final WiseSaying[] sayings = new WiseSaying[1001];
+    private final ArrayList <WiseSaying> sayings = new ArrayList<>();
     // 0-base index와 사용자의 입력.출력 number 간 괴리를 줄이기 위해 아예 index = 0은 null로 유지할 것
     // sayings[0] = null;
     private int index = 1;
@@ -36,7 +37,7 @@ public class WiseSayingRepository {
 
                 if(Files.exists(filePath)){
                     String json = Files.readString(filePath);
-                    sayings[i] = fromJson(json);
+                    sayings.add(i, fromJson(json));
                 }
 
             }
@@ -46,7 +47,7 @@ public class WiseSayingRepository {
     }
     // 명언 등록
     public WiseSaying saveNew(String content, String author) {
-        if (index >= sayings.length) {
+        if (index >= sayings.size()) {
             throw new IllegalStateException("더 이상 명언을 등록할 수 없습니다.");
         }
 
@@ -74,8 +75,8 @@ public class WiseSayingRepository {
 
         // 최신순으로 배열에 저장
         for (int i = index - 1; i >= 1; i--) {
-            if (sayings[i] != null) {
-                result[count] = sayings[i];
+            if (sayings.get(i) != null) {
+                result[count] = sayings.get(i);
                 count++;
             }
         }
@@ -134,13 +135,13 @@ public class WiseSayingRepository {
             return null;
         }
 
-        return sayings[id];
+        return sayings.get(id);
     }
 
     // 명언 저장 및 수정
     public void editById(WiseSaying saying) {
         int id = saying.getId();
-        if (id < 1 || id >= sayings.length) {
+        if (id < 1 || id >= sayings.size()) {
             throw new IllegalArgumentException("유효하지 않은 명언 번호입니다.");
         }
 
@@ -148,7 +149,7 @@ public class WiseSayingRepository {
 
         try {
             Files.writeString(filePath, toJson(saying));
-            sayings[id] = saying;
+            sayings.add(id, saying);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -165,7 +166,7 @@ public class WiseSayingRepository {
 
         try {
             Files.deleteIfExists(filePath);
-            sayings[id] = null;
+            sayings.add(id, null);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
