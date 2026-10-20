@@ -33,10 +33,11 @@ public class App  {
                     return;
                 }
                 case "enroll" -> wiseSayingController.enroll();
-                case "show" -> wiseSayingController.show(rq);
+                case "list" -> wiseSayingController.show(rq);
                 case "delete" -> wiseSayingController.delete(rq);
                 case "edit" -> wiseSayingController.edit(rq);
                 case "search" -> wiseSayingController.search(rq);
+                case "build" -> wiseSayingController.build();
 
                 default -> System.out.println("옳지 않은 INPUT. 다시 입력해주세요.");
             }

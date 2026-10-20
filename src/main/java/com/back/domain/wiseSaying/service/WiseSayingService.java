@@ -64,6 +64,10 @@ public class WiseSayingService {
         return true;
     }
 
+    public void build(){
+        wiseSayingRepository.build();
+    }
+
 
 
 }

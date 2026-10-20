@@ -111,5 +111,10 @@ public class WiseSayingController {
         for (WiseSaying saying : pagedSayings) {
             System.out.println(saying);
         }
-    }
+        }
+
+        public void build(){
+            wiseSayingService.build();
+            System.out.println("data.json의 파일의 내용이 갱신되었습니다.");
+        }
     }

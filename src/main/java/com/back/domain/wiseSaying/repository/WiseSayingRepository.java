@@ -11,10 +11,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.stream.Collectors;
 
 public class WiseSayingRepository {
 
-    private final Path dbPath = Paths.get("db/wiseSaying");
+    private final Path dbPath = Path.of(
+            System.getProperty("wiseSaying.dbPath", "db/wiseSaying")
+    );
     private final Path lastIdPath =dbPath.resolve("lastId.txt");
 
     // 최대 배열 길이 1001
@@ -47,24 +50,23 @@ public class WiseSayingRepository {
             throw new RuntimeException(e);
         }
     }
-    // 명언 등록
-    public WiseSaying saveNew(String content, String author) {
-        if (index >= sayings.size()) {
-            throw new IllegalStateException("더 이상 명언을 등록할 수 없습니다.");
-        }
 
+    // 명언 새로 등록
+    public WiseSaying saveNew(String content, String author) {
         WiseSaying saying = new WiseSaying(index, content, author);
 
-        editById(saying);
+        Path filePath = dbPath.resolve(index + ".json");
 
         try {
-            // 마지막 명언 번호 저장
+            Files.writeString(filePath, toJson(saying));
             Files.writeString(lastIdPath, String.valueOf(index));
+
+            sayings.add(saying);
+            index++;
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-        index++;
 
         return saying;
     }
@@ -129,10 +131,10 @@ public class WiseSayingRepository {
                 .orElse(null); // 검색 결과 없다면 null 반환
     }
 
-    // 명언 저장 및 수정
+    // 명언 수정
     public void editById(WiseSaying saying) {
         int id = saying.getId();
-        if (id < 1 || id >= sayings.size()) {
+        if (id < 1 || findById(id) == null) {
             throw new IllegalArgumentException("유효하지 않은 명언 번호입니다.");
         }
 
@@ -140,11 +142,16 @@ public class WiseSayingRepository {
 
         try {
             Files.writeString(filePath, toJson(saying));
-            sayings.add(id, saying);
+
+            sayings.removeIf(s -> s.getId() == id);
+            sayings.add(saying);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+
     }
+
 
 
     // 명언 삭제
@@ -193,5 +200,20 @@ public class WiseSayingRepository {
                 .replace("\"", "").replaceAll(",$", "");
 
         return new WiseSaying(id, content, author);
+    }
+
+    public void build(){
+        String json = sayings.stream()
+                .sorted(Comparator.comparingInt(WiseSaying :: getId))
+                .map(this::toJson)
+                .collect(Collectors.joining(",\n", "[\n", "\n]"));
+
+        Path filePath = dbPath.resolve("data.json");
+
+        try {
+            Files.writeString(filePath, json);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
