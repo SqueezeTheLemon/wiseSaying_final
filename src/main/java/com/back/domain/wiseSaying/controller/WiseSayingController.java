@@ -5,9 +5,11 @@
 package com.back.domain.wiseSaying.controller;
 
 import com.back.domain.wiseSaying.entity.WiseSaying;
+import com.back.domain.wiseSaying.repository.WiseSayingRepository;
 import com.back.domain.wiseSaying.service.WiseSayingService;
 import com.back.global.rq.Rq;
 
+import java.sql.SQLException;
 import java.util.Scanner;
 
 public class WiseSayingController {
@@ -15,12 +17,12 @@ public class WiseSayingController {
     private final WiseSayingService wiseSayingService;
 
     // 생성자
-    public WiseSayingController(Scanner sc) {
+    public WiseSayingController(Scanner sc, WiseSayingRepository repository) {
         this.sc = sc;
-        this.wiseSayingService = new WiseSayingService();
+        this.wiseSayingService = new WiseSayingService(repository);
     }
 
-    public void enroll(){
+    public void enroll() throws SQLException {
 
         System.out.print("명언) : ");
         String content = sc.nextLine().trim();
@@ -32,7 +34,7 @@ public class WiseSayingController {
         System.out.println(saying.getId() + "번 명언이 등록되었습니다.");
     }
 
-    public void delete(Rq rq){
+    public void delete(Rq rq) throws SQLException {
         int delete_number = rq.getParamAsInt("id", -1);
 
         // 추후 WiseSayingService.delete() 호출
@@ -45,7 +47,7 @@ public class WiseSayingController {
         }
     }
 
-    public void edit(Rq rq){
+    public void edit(Rq rq) throws SQLException {
         int edit_number = rq.getParamAsInt("id", -1);
 
         // 수정하려는 명언이 존재하는지 확인
@@ -74,7 +76,7 @@ public class WiseSayingController {
         }
     }
 
-    public void show(Rq rq){
+    public void show(Rq rq) throws SQLException {
         WiseSaying[] sayings = wiseSayingService.getAllList();
         int totalPages = (sayings.length + 4) / 5;
 
@@ -92,7 +94,7 @@ public class WiseSayingController {
 
     }
 
-    public void search(Rq rq){
+    public void search(Rq rq) throws SQLException {
 
         String type = rq.getParam("keywordType", "content");
         String keyword = rq.getParam("keyWord", "");
@@ -113,7 +115,7 @@ public class WiseSayingController {
         }
         }
 
-        public void build(){
+        public void build() throws SQLException {
             wiseSayingService.build();
             System.out.println("data.json의 파일의 내용이 갱신되었습니다.");
         }

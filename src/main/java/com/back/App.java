@@ -5,17 +5,46 @@ package com.back;
 
 import com.back.domain.wiseSaying.controller.WiseSayingController;
 import com.back.domain.system.controller.SystemController;
+import com.back.domain.wiseSaying.repository.WiseSayingDbRepository;
+import com.back.domain.wiseSaying.repository.WiseSayingFileRepository;
+import com.back.domain.wiseSaying.repository.WiseSayingRepository;
+import com.back.global.db.SimpleDb;
 import com.back.global.rq.Rq;
 
+import java.sql.SQLException;
 import java.util.Scanner;
 
 public class App  {
-    private final Scanner sc = new Scanner(System.in);
+    // file로 저장하는 경우 = new WiseSayingFileRepository();
+    // DB에 저장하는 경우 = new WiseSayingDbRepository(simpleDb);
+    public void run() throws SQLException {
+        Scanner sc = new Scanner(System.in);
 
-    SystemController systemController = new SystemController();
-    WiseSayingController wiseSayingController = new WiseSayingController(sc);
+        String repositoryType = System.getProperty(
+                "wiseSaying.repository", "db"
+        );
 
-    public void run() {
+        WiseSayingRepository repository;
+
+        if ("file".equals(repositoryType)) {
+            repository = new WiseSayingFileRepository();
+        } else {
+            SimpleDb simpleDb = new SimpleDb(
+                    System.getenv("DB_HOST"),
+                    System.getenv("DB_USERNAME"),
+                    System.getenv("DB_PASSWORD"),
+                    System.getenv("DB_NAME")
+            );
+            System.err.println(
+                    "[APP] DB_NAME = " + System.getenv("DB_NAME")
+            );
+            repository = new WiseSayingDbRepository(simpleDb);
+        }
+        SystemController systemController = new SystemController();
+        WiseSayingController wiseSayingController =
+                new WiseSayingController(sc, repository);
+
+
         System.out.println("== 명언 앱 ==");
 
         while (true) {
