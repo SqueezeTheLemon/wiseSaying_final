@@ -2,6 +2,7 @@ package com.back;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
 
 public class AppTestRunner {
 
@@ -22,6 +23,8 @@ public class AppTestRunner {
             new App().run();
 
             return out.toString(StandardCharsets.UTF_8);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         } finally {
             System.setIn(originalIn);
             System.setOut(originalOut);

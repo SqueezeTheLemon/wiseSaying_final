@@ -16,10 +16,11 @@ public class WiseSayingControllerTest {
 
     @BeforeEach
     void setUp() throws IOException {
-        // 테스트 전용 DB 경로 설정
+        // Controller 테스트는 파일 Repository + 테스트 전용 경로 사용 (MySQL과 분리)
+        System.setProperty("wiseSaying.repository", "file");
         System.setProperty("wiseSaying.dbPath", testDbPath.toString());
 
-        // 매 테스트 전에 테스트 DB 초기화
+        // 매 테스트 전에 테스트 DB 초기화 (lastId.txt 포함)
         if (Files.exists(testDbPath)) {
             try (Stream<Path> paths = Files.walk(testDbPath)) {
                 for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) {
@@ -33,6 +34,7 @@ public class WiseSayingControllerTest {
 
     @AfterEach
     void tearDown() {
+        System.clearProperty("wiseSaying.repository");
         System.clearProperty("wiseSaying.dbPath");
     }
 
@@ -46,7 +48,8 @@ public class WiseSayingControllerTest {
                 exit
                 """);
 
-        assertTrue(out.contains("1번 명언이 등록되었습니다."));
+
+        assertTrue(out.contains("1번 명언이 등록되었습니다."), out);
         assertTrue(Files.exists(testDbPath.resolve("1.json")));
     }
 
